@@ -1,0 +1,71 @@
+# Pre-commit hooks for code quality
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Python formatting and linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        name: ruff (Python linter)
+        args: [--fix]
+        files: ^backend/
+
+      - id: ruff-format
+        name: ruff format (Python formatter)
+        files: ^backend/
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^frontend/node_modules/
+      - id: check-json
+        exclude: ^frontend/(node_modules|\.next)/
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # Python-specific checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-ast
+        files: ^backend/.*\.py$
+      - id: check-docstring-first
+        files: ^backend/.*\.py$
+
+  # TypeScript/JavaScript linting
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.0.0-beta.2
+    hooks:
+      - id: eslint
+        name: ESLint (TypeScript/JavaScript)
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        exclude: ^frontend/(node_modules|\.next)/
+        additional_dependencies:
+          - eslint@8
+          - eslint-config-next@14
+
+  # Commit message validation
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+# Optional: Run backend smoke tests on commit
+  - repo: local
+    hooks:
+      - id: backend-smoke-tests
+        name: Backend smoke import tests
+        entry: bash -c 'cd backend && python -m pytest tests/test_smoke.py -v --no-cov || true'
+        language: system
+        pass_filenames: false
+        always_run: false
+        files: ^backend/src/.*\.py$
